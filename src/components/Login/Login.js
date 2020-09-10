@@ -8,6 +8,9 @@ import * as firebase from "firebase/app";
 // Add the Firebase products that you want to use
 import "firebase/auth";
 import firebaseConfig from './firebase.config';
+import { useContext } from 'react';
+import { UserContext } from '../../App';
+import { useHistory, useLocation } from 'react-router-dom';
 
 firebase.initializeApp(firebaseConfig);
 
@@ -23,11 +26,17 @@ function Login() {
         phone: ''
     });
 
-    const provider = new firebase.auth.GoogleAuthProvider();
+    const [loggedInUser, setLoggedInUser] = useContext(UserContext);
+
+    const history = useHistory();
+    const location = useLocation();
+    let { from } = location.state || { from: { pathname: "/" } };
+
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
     const fbProvider = new firebase.auth.FacebookAuthProvider();
 
     const handleSignIn = () => {
-        firebase.auth().signInWithPopup(provider)
+        firebase.auth().signInWithPopup(googleProvider)
             .then(res => {
                 const { displayName, photoURL, email } = res.user;
                 const signedInUser = {
@@ -116,7 +125,6 @@ function Login() {
                     newUserInfo.success = true;
                     setUser(newUserInfo);
                     updateUserName(user.name);
-                    console.log('sign in user info', res.user);
                 })
                 .catch(error => {
                     // Handle Errors here.
@@ -134,6 +142,9 @@ function Login() {
                     newUserInfo.error = '';
                     newUserInfo.success = true;
                     setUser(newUserInfo);
+                    setLoggedInUser(newUserInfo);
+                    history.replace(from);
+                    console.log('sign in user info', res.user);
                 })
 
                 .catch(function (error) {
